@@ -1,46 +1,86 @@
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'adaptative_buttom.dart';
+import 'adaptative_text_fild.dart';
+import 'adaptative_date_picker.dart';
 
-class TransactionForm extends StatelessWidget {
-  final titleController = TextEditingController();
-  final valueController = TextEditingController();
+class TransactionForm extends StatefulWidget {
+  final void Function(String, double, DateTime) onSubmit;
+
+  const TransactionForm(this.onSubmit, {Key? key}) : super(key: key);
+
+  @override
+  State<TransactionForm> createState() => _TransactionFormState();
+}
+
+class _TransactionFormState extends State<TransactionForm> {
+  final _titleController = TextEditingController();
+  final _valueController = TextEditingController();
+  DateTime? _selectedDate = DateTime.now();
+
+  _submitForm() {
+    final title = _titleController.text;
+    final value = double.tryParse(_valueController.text) ?? 0;
+
+    if (title.isEmpty || value <= 0 || _selectedDate == null) {
+      return;
+    }
+
+    widget.onSubmit(title, value, _selectedDate!);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          children: <Widget>[
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                labelText: 'Nome',
+    return SingleChildScrollView(
+      child: Container(
+        color: const Color.fromRGBO(42, 147, 110, 1),
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 10,
+            right: 10,
+            left: 10,
+            bottom: 60 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            children: [
+              AdaptativeTextField(
+                controller: _titleController,
+                onSubmitted: (_) => _submitForm(),
+                label: 'Nome',
               ),
-            ),
-            TextField(
-              controller: valueController,
-              decoration: InputDecoration(
-                labelText: 'Valor (R\$)',
+              AdaptativeTextField(
+                label: 'Valor (R\$)',
+                controller: _valueController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                onSubmitted: (_) => _submitForm(),
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                TextButton(
-                  child: Text('Nova Despesa'),
-                  // color: Colors.066443,
-                  // textColor: Colors.F3E6E6,
-                  onPressed: () {
-                    print(titleController.text);
-                    print(valueController.text);
-                  },
-                ),
-              ],
-            )
-          ],
+              // new component
+              AdaptativeDatePicker(
+                selectedDate: _selectedDate,
+                onDateChanged: (newDate) {
+                  setState(() {
+                    _selectedDate = newDate;
+                  });
+                },
+              ),
+              Column(
+                children: [
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      backgroundColor: const Color.fromRGBO(6, 100, 67, 1),
+                    ),
+                    onPressed: _submitForm,
+                    child: const Text('Nova Despesa'),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
